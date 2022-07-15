@@ -3,11 +3,13 @@
 namespace ChristianKuri\LaravelFavorite\Traits;
 
 use ChristianKuri\LaravelFavorite\Models\Favorite;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 
 /**
  * This file is part of Laravel Favorite,
  *
+ * @method static \Illuminate\Database\Eloquent\Builder onlyFavorited($user_id = null)
  * @license MIT
  * @package ChristianKuri/laravel-favorite
  *
@@ -27,8 +29,8 @@ trait Favoriteable
 
     /**
      * Add this Object to the user favorites
-     * 
-     * @param  int $user_id  [if  null its added to the auth user]
+     *
+     * @param  int  $user_id  [if  null its added to the auth user]
      */
     public function addFavorite($user_id = null)
     {
@@ -39,8 +41,8 @@ trait Favoriteable
     /**
      * Remove this Object from the user favorites
      *
-     * @param  int $user_id  [if  null its added to the auth user]
-     * 
+     * @param  int  $user_id  [if  null its added to the auth user]
+     *
      */
     public function removeFavorite($user_id = null)
     {
@@ -49,18 +51,18 @@ trait Favoriteable
 
     /**
      * Toggle the favorite status from this Object
-     * 
-     * @param  int $user_id  [if  null its added to the auth user]
+     *
+     * @param  int  $user_id  [if  null its added to the auth user]
      */
     public function toggleFavorite($user_id = null)
     {
-        $this->isFavorited($user_id) ? $this->removeFavorite($user_id) : $this->addFavorite($user_id) ;
+        $this->isFavorited($user_id) ? $this->removeFavorite($user_id) : $this->addFavorite($user_id);
     }
 
     /**
      * Check if the user has favorited this Object
-     * 
-     * @param  int $user_id  [if  null its added to the auth user]
+     *
+     * @param  int  $user_id  [if  null its added to the auth user]
      * @return boolean
      */
     public function isFavorited($user_id = null)
@@ -70,7 +72,7 @@ trait Favoriteable
 
     /**
      * Return a collection with the Users who marked as favorite this Object.
-     * 
+     *
      * @return Collection
      */
     public function favoritedBy()
@@ -81,8 +83,22 @@ trait Favoriteable
     }
 
     /**
+     * Retrieve only the favorited objects.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $builder
+     * @param  int|null  $user_id  [if  null its added to the auth user]
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeOnlyFavorited(Builder $builder, $user_id = null)
+    {
+        return $builder->whereHas('favorites', function ($builder) use ($user_id) {
+            $builder->where('user_id', $user_id ?: Auth::id());
+        });
+    }
+
+    /**
      * Count the number of favorites
-     * 
+     *
      * @return int
      */
     public function getFavoritesCountAttribute()
@@ -100,7 +116,7 @@ trait Favoriteable
 
     /**
      * Add deleted observer to delete favorites registers
-     * 
+     *
      * @return void
      */
     public static function bootFavoriteable()
@@ -111,5 +127,4 @@ trait Favoriteable
             }
         );
     }
-
 }
